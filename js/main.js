@@ -1,5 +1,23 @@
 document.getElementById('year').textContent = new Date().getFullYear();
 
+const themeButtons = document.querySelectorAll('.theme-btn');
+const applyTheme = (theme) => {
+  document.documentElement.setAttribute('data-theme', theme);
+  themeButtons.forEach((btn) => {
+    const active = btn.dataset.themeChoice === theme;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  });
+};
+themeButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const theme = btn.dataset.themeChoice;
+    localStorage.setItem('myappflow-theme', theme);
+    applyTheme(theme);
+  });
+});
+applyTheme(document.documentElement.getAttribute('data-theme'));
+
 const revealTargets = document.querySelectorAll(
   '.pillar, .step, .benefit, .arch-card, .benefits-callout, .case, .approach-item, .contact-card'
 );

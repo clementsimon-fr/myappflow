@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8">
+<script>
+(function () {
+  var saved = localStorage.getItem('myappflow-theme');
+  if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MyAppFlow — Applications sur mesure | Clément Simon</title>
+<title>MyAppFlow · Applications sur mesure | Clément Simon</title>
 <meta name="description" content="MyAppFlow conçoit des applications digitales sur mesure, pensées pour les personnes qui les utilisent. Découvrez la méthode et 3 projets en cours de développement.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0f0e'/%3E%3Ctext x='32' y='42' font-size='30' font-family='Georgia,serif' fill='%2334d399' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +22,14 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a href="#accueil" class="logo">MyAppFlow</a>
-    <a href="#contact" class="btn btn-small btn-primary">Prendre rendez-vous</a>
+    <div class="header-actions">
+      <div class="theme-toggle" role="group" aria-label="Mode d'affichage">
+        <span class="theme-label">Mode</span>
+        <button type="button" class="theme-btn is-active" data-theme-choice="dark" aria-pressed="true" title="Mode sombre">Sombre</button>
+        <button type="button" class="theme-btn" data-theme-choice="light" aria-pressed="false" title="Mode clair">Claire</button>
+      </div>
+      <a href="#contact" class="btn btn-small btn-primary">Prendre rendez-vous</a>
+    </div>
   </div>
 </header>
 
@@ -26,9 +39,8 @@
   <section id="accueil" class="hero">
     <div class="wrap">
       <p class="eyebrow eyebrow-badge">👋 Merci d'avoir scanné ce QR code</p>
-      <p class="signature">Clément Simon</p>
       <h1>Des applications <em>sur mesure</em><br>pour vous déployer.</h1>
-      <p class="lead">Je conçois des outils digitaux pensés pour les personnes qui les utilisent. Une application adaptée à votre activité, robuste et accessible — pour libérer du temps sur l'essentiel.</p>
+      <p class="lead">Je conçois des outils digitaux pensés pour les personnes qui les utilisent. Une application adaptée à votre activité, robuste et accessible, pour libérer du temps sur l'essentiel.</p>
       <div class="cta-row">
         <a href="#contact" class="btn btn-primary">Prendre rendez-vous</a>
         <a href="#cas-clients" class="btn btn-ghost">Voir les projets en cours</a>
@@ -41,7 +53,7 @@
     <div class="wrap section-grid">
       <p class="eyebrow">(01) Ma mission</p>
       <div>
-        <h2 class="statement">Rendre le digital utile, humain et accessible. Développer des applicatifs métiers <em>sur mesure</em>, pensés pour les gens qui les utilisent — pas l'inverse.</h2>
+        <h2 class="statement">Rendre le digital utile, humain et accessible. Développer des applicatifs métiers <em>sur mesure</em>, pensés pour les gens qui les utilisent, pas l'inverse.</h2>
         <div class="pillars">
           <div class="pillar">
             <span class="pillar-tag">Côté humain</span>
@@ -49,7 +61,7 @@
           </div>
           <div class="pillar">
             <span class="pillar-tag">Côté financier</span>
-            <p>Remplacer plusieurs abonnements payants par une application unique développée par l'IA — pour centraliser vos besoins et réduire le coût logiciel global.</p>
+            <p>Remplacer plusieurs abonnements payants par une application unique développée par l'IA, pour centraliser vos besoins et réduire le coût logiciel global.</p>
           </div>
           <div class="pillar">
             <span class="pillar-tag">Côté technique</span>
@@ -101,6 +113,7 @@
         </div>
       </div>
 
+      <p class="eyebrow benefits-title">Autrement dit</p>
       <div class="benefits">
         <div class="benefit">
           <h4>Donner de la place à votre cœur de métier</h4>
@@ -184,7 +197,7 @@
             </div>
             <div>
               <h4>Un seul interlocuteur</h4>
-              <p>De l'analyse au déploiement, vous échangez avec la même personne — pas une équipe qui change à chaque phase.</p>
+              <p>De l'analyse au déploiement, vous échangez avec la même personne, pas une équipe qui change à chaque phase.</p>
             </div>
           </div>
         </div>
@@ -210,8 +223,8 @@
             <p class="case-tag">01 · Piloter le terrain</p>
             <h3>MyTelencia</h3>
             <p class="case-sector">Entreprise · Gestion de flotte</p>
-            <p>Un CRM sur mesure pour centraliser le suivi de flotte, les équipes, les interventions et la messagerie interne — la donnée opérationnelle au même endroit.</p>
-            <span class="case-status"><i></i> En développement — Livraison Septembre 2026</span>
+            <p>Un CRM sur mesure pour centraliser le suivi de flotte, les équipes, les interventions et la messagerie interne : la donnée opérationnelle au même endroit.</p>
+            <span class="case-status"><i></i> En développement · Livraison Septembre 2026</span>
           </div>
         </article>
 
@@ -224,7 +237,7 @@
             <h3>MyIgiStudio</h3>
             <p class="case-sector">Bien-être · Studio de yoga</p>
             <p>Une application de réservation élégante : cours, ateliers, cartes de crédits et espace client. Moins d'administratif, plus de présence pour les adhérents.</p>
-            <span class="case-status"><i></i> En développement — Livraison Septembre 2026</span>
+            <span class="case-status"><i></i> En développement · Livraison Septembre 2026</span>
           </div>
         </article>
 
@@ -237,7 +250,7 @@
             <h3>MySchool</h3>
             <p class="case-sector">Formation · Apprentissage</p>
             <p>Une plateforme de formation gamifiée : le parcours devient une « Ville de la Compétence » à explorer, territoire par territoire. L'apprentissage rendu visuel et motivant.</p>
-            <span class="case-status"><i></i> En développement — Livraison Septembre 2026</span>
+            <span class="case-status"><i></i> En développement · Livraison Septembre 2026</span>
           </div>
         </article>
       </div>
@@ -307,7 +320,7 @@
 
 <footer class="site-footer">
   <div class="wrap footer-inner">
-    <span>Cabinet CS — MyAppFlow · Clément Simon</span>
+    <span>Cabinet CS · MyAppFlow · Clément Simon</span>
     <span id="year"></span>
   </div>
 </footer>

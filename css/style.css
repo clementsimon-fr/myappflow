@@ -189,14 +189,17 @@ blockquote{ margin: 0; }
   gap: 8px;
   margin-top: 20px;
   background: none;
-  border: none;
-  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  padding: 12px 22px;
+  transition: border-color .15s ease;
 }
+.install-btn:hover{ border-color: var(--accent); }
 .ios-hint{
   margin-top: 16px;
   max-width: 46ch;

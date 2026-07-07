@@ -18,37 +18,40 @@ themeButtons.forEach((btn) => {
 });
 applyTheme(document.documentElement.getAttribute('data-theme'));
 
-// Ajout à l'écran d'accueil
+// Enregistrer le site sur le téléphone
 const installBtn = document.getElementById('installBtn');
-const iosHint = document.getElementById('iosHint');
-const iosHintClose = document.getElementById('iosHintClose');
+const installHint = document.getElementById('installHint');
+const installHintText = document.getElementById('installHintText');
+const installHintClose = document.getElementById('installHintClose');
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 let deferredInstallPrompt = null;
 
-if (!isStandalone && installBtn) {
-  if (isIOS) {
-    installBtn.hidden = false;
-    installBtn.addEventListener('click', () => {
-      iosHint.hidden = false;
-    });
-    iosHintClose.addEventListener('click', () => {
-      iosHint.hidden = true;
-    });
-  } else {
-    window.addEventListener('beforeinstallprompt', (event) => {
-      event.preventDefault();
-      deferredInstallPrompt = event;
-      installBtn.hidden = false;
-    });
-    installBtn.addEventListener('click', async () => {
-      if (!deferredInstallPrompt) return;
+const IOS_MESSAGE = "Sur iPhone : appuyez sur Partager ⬆️ en bas de Safari, puis « Sur l'écran d'accueil ».";
+const FALLBACK_MESSAGE = "Ouvrez le menu de votre navigateur, puis « Installer l'application » ou « Ajouter à l'écran d'accueil ».";
+
+if (isStandalone && installBtn) {
+  installBtn.hidden = true;
+} else if (installBtn) {
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (!isIOS && deferredInstallPrompt) {
       deferredInstallPrompt.prompt();
       await deferredInstallPrompt.userChoice;
       deferredInstallPrompt = null;
-      installBtn.hidden = true;
-    });
-  }
+      return;
+    }
+    installHintText.textContent = isIOS ? IOS_MESSAGE : FALLBACK_MESSAGE;
+    installHint.hidden = false;
+  });
+
+  installHintClose.addEventListener('click', () => {
+    installHint.hidden = true;
+  });
 }
 
 if ('serviceWorker' in navigator) {

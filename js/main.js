@@ -20,9 +20,6 @@ applyTheme(document.documentElement.getAttribute('data-theme'));
 
 // Enregistrer le site sur le téléphone
 const installBtn = document.getElementById('installBtn');
-const installHint = document.getElementById('installHint');
-const installHintText = document.getElementById('installHintText');
-const installHintClose = document.getElementById('installHintClose');
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 let deferredInstallPrompt = null;
@@ -45,12 +42,7 @@ if (isStandalone && installBtn) {
       deferredInstallPrompt = null;
       return;
     }
-    installHintText.textContent = isIOS ? IOS_MESSAGE : FALLBACK_MESSAGE;
-    installHint.hidden = false;
-  });
-
-  installHintClose.addEventListener('click', () => {
-    installHint.hidden = true;
+    alert(isIOS ? IOS_MESSAGE : FALLBACK_MESSAGE);
   });
 }
 

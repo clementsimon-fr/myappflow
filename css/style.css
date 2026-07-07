@@ -161,13 +161,6 @@ blockquote{ margin: 0; }
   font-weight: 500;
   font-size: 14px;
 }
-.signature{
-  margin: 20px 0 6px;
-  color: var(--text-muted);
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 .hero h1{
   font-size: clamp(32px, 5.5vw, 56px);
   max-width: 16ch;
@@ -184,44 +177,25 @@ blockquote{ margin: 0; }
   margin-top: 32px;
 }
 .install-btn{
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  margin-top: 20px;
+  width: fit-content;
+  margin: 20px auto 0;
   background: none;
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--text);
   font-family: var(--font-sans);
   font-size: 14px;
-  font-weight: 600;
+  font-style: italic;
+  font-weight: 400;
   cursor: pointer;
   padding: 12px 22px;
   transition: border-color .15s ease;
 }
 .install-btn:hover{ border-color: var(--accent); }
-.ios-hint{
-  margin-top: 16px;
-  max-width: 46ch;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px 18px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-.ios-hint p{ margin: 0; font-size: 14px; color: var(--text); }
-.ios-hint-close{
-  border: none;
-  background: none;
-  color: var(--text-muted);
-  font-size: 13px;
-  cursor: pointer;
-  white-space: nowrap;
-  padding: 0;
-}
 
 /* ---------- Sections ---------- */
 .section{ padding: 88px 0; }

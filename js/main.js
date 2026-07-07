@@ -18,6 +18,43 @@ themeButtons.forEach((btn) => {
 });
 applyTheme(document.documentElement.getAttribute('data-theme'));
 
+// Ajout à l'écran d'accueil
+const installBtn = document.getElementById('installBtn');
+const iosHint = document.getElementById('iosHint');
+const iosHintClose = document.getElementById('iosHintClose');
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+let deferredInstallPrompt = null;
+
+if (!isStandalone && installBtn) {
+  if (isIOS) {
+    installBtn.hidden = false;
+    installBtn.addEventListener('click', () => {
+      iosHint.hidden = false;
+    });
+    iosHintClose.addEventListener('click', () => {
+      iosHint.hidden = true;
+    });
+  } else {
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      installBtn.hidden = false;
+    });
+    installBtn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.hidden = true;
+    });
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
 const revealTargets = document.querySelectorAll(
   '.pillar, .step, .benefit, .arch-card, .benefits-callout, .case, .approach-item, .contact-card'
 );

@@ -12,6 +12,12 @@
 <title>MyAppFlow · Applications sur mesure | Clément Simon</title>
 <meta name="description" content="MyAppFlow conçoit des applications digitales sur mesure, pensées pour les personnes qui les utilisent. Découvrez la méthode et 3 projets en cours de développement.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0f0e'/%3E%3Ctext x='32' y='42' font-size='30' font-family='Georgia,serif' fill='%2334d399' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<meta name="theme-color" content="#0a0d0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MyAppFlow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -44,6 +50,11 @@
       <div class="cta-row">
         <a href="#contact" class="btn btn-primary">Prendre rendez-vous</a>
         <a href="#cas-clients" class="btn btn-ghost">Voir les projets en cours</a>
+      </div>
+      <button type="button" id="installBtn" class="install-btn" hidden>📲 Ajouter ce site à l'écran d'accueil</button>
+      <div id="iosHint" class="ios-hint" hidden>
+        <p>Sur iPhone : appuyez sur <strong>Partager</strong> ⬆️ en bas de Safari, puis <strong>« Sur l'écran d'accueil »</strong>.</p>
+        <button type="button" id="iosHintClose" class="ios-hint-close" aria-label="Fermer">Fermer</button>
       </div>
     </div>
   </section>

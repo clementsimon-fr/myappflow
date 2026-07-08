@@ -232,8 +232,25 @@ blockquote{ margin: 0; }
   display: block;
   margin-bottom: 12px;
 }
-.contact-card .block-icon{ margin-bottom: 8px; }
 .pillars{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.pillars{ border-top: 1px solid var(--border); padding-top: 32px; }
+.pillar-head{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.pillar-icon{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pillar-icon .block-icon{ width: 17px; height: 17px; margin: 0; }
 .pillar-tag{
   display: inline-block;
   font-size: 12px;
@@ -241,7 +258,6 @@ blockquote{ margin: 0; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 10px;
 }
 .pillar p{ font-size: 15px; }
 
@@ -284,8 +300,24 @@ blockquote{ margin: 0; }
 .benefits{
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 32px 40px;
+  gap: 20px;
 }
+.benefit{
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  background: var(--surface);
+  transition: border-color .2s ease, transform .2s ease;
+}
+.benefit:hover{ border-color: var(--accent); transform: translateY(-3px); }
+.benefit-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.benefit-head .block-icon{ margin: 0; }
+.benefit-num{ font-family: var(--font-serif); font-size: 13px; color: var(--text-muted); }
 .benefit h4{ font-size: 17px; margin-bottom: 8px; }
 .benefit p{ font-size: 14px; margin-bottom: 0; }
 
@@ -329,6 +361,7 @@ blockquote{ margin: 0; }
 .arch-sep{ color: var(--accent); font-family: var(--font-sans); font-size: 16px; }
 .arch-tool{ display: inline-flex; align-items: center; gap: 8px; }
 .arch-logo{ width: 20px; height: 20px; fill: currentColor; flex-shrink: 0; }
+.arch-logo--stroke{ fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
 .arch-stack-custom{ color: var(--text-muted); font-style: italic; }
 .arch-list{ margin: 18px 0 0; padding-left: 20px; font-size: 14px; color: var(--text-muted); }
 .arch-list li{ margin-bottom: 8px; }
@@ -345,7 +378,20 @@ blockquote{ margin: 0; }
   grid-template-columns: repeat(3, 1fr);
   gap: 28px;
 }
-.callout-grid h4{ font-size: 16px; color: var(--accent); margin-bottom: 6px; }
+.callout-item{
+  border-left: 2px solid var(--border);
+  padding-left: 16px;
+  transition: border-color .2s ease;
+}
+.callout-item:hover{ border-left-color: var(--accent); }
+.callout-head{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.callout-head .block-icon{ width: 20px; height: 20px; margin: 0; }
+.callout-grid h4{ font-size: 16px; color: var(--accent); margin-bottom: 0; }
 .callout-grid p{ font-size: 14px; margin-bottom: 0; }
 
 /* Cas clients */
@@ -431,6 +477,18 @@ blockquote{
   gap: 24px;
   margin-top: 32px;
 }
+.approach-item{ display: flex; align-items: flex-start; gap: 16px; }
+.approach-badge{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  flex-shrink: 0;
+}
+.approach-badge .block-icon{ width: 19px; height: 19px; margin: 0; }
 .approach-item h4{ font-size: 16px; margin-bottom: 6px; }
 .approach-item p{ font-size: 14px; margin-bottom: 0; }
 
@@ -444,6 +502,7 @@ blockquote{
   margin-top: 72px;
 }
 .contact-card{
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -454,6 +513,15 @@ blockquote{
   transition: border-color .15s ease;
 }
 a.contact-card:hover{ border-color: var(--accent); }
+.contact-card .block-icon{
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  opacity: 0.55;
+}
 .contact-label{ font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }
 .contact-value{ font-size: 17px; color: var(--text); font-weight: 500; }
 .contact-sub{ font-size: 13px; color: var(--text-muted); }

@@ -107,7 +107,7 @@ insert into public.settings (id) values (true);
 -- ---------------------------------------------------------------------------
 
 create or replace function public.touch_updated_at() returns trigger
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 begin
   new.updated_at := now();
   return new;
@@ -151,7 +151,7 @@ $$;
 -- ---------------------------------------------------------------------------
 
 create or replace function public.try_uuid(p text) returns uuid
-language sql immutable as $$
+language sql immutable set search_path = public as $$
   select case when p ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then p::uuid end;
 $$;
 
@@ -209,11 +209,20 @@ language sql security definer set search_path = public as $$
   update public.profiles set last_login_at = now() where id = auth.uid();
 $$;
 
-revoke execute on function public.next_document_number(text, int) from anon;
-revoke execute on function public.client_declare_payment(uuid) from anon;
-revoke execute on function public.client_attach_signed_devis(uuid, text) from anon;
-revoke execute on function public.mark_password_changed() from anon;
-revoke execute on function public.touch_last_login() from anon;
+-- Fonctions appelables uniquement par un utilisateur connecté (jamais par un visiteur anonyme).
+do $$
+declare f text;
+begin
+  foreach f in array array[
+    'public.next_document_number(text, int)', 'public.client_declare_payment(uuid)',
+    'public.client_attach_signed_devis(uuid, text)', 'public.mark_password_changed()',
+    'public.touch_last_login()', 'public.is_admin()', 'public.my_client_id()',
+    'public.client_owns_document(uuid)'
+  ] loop
+    execute format('revoke execute on function %s from public, anon', f);
+    execute format('grant execute on function %s to authenticated', f);
+  end loop;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- Sécurité ligne par ligne (RLS)

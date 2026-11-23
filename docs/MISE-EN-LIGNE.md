@@ -12,6 +12,8 @@ Tant que ces étapes ne sont pas faites, `/espace` affiche « L'espace client n'
 
 ## 2. Configurer Vercel
 
+Le plus simple : *Vercel → projet myappflow → Storage (ou Integrations) → Supabase → Connect* et choisir le projet Supabase `myappflow`. Vercel ajoute alors seul `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`, que l'espace sait lire. Sinon, ajouter les variables à la main :
+
 *Vercel → projet myappflow → Settings → Environment Variables* (Production et Preview) :
 
 | Nom | Valeur |

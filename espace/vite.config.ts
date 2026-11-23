@@ -28,6 +28,7 @@ export default defineConfig({
   root,
   base: '/espace/',
   envDir: fileURLToPath(new URL('..', import.meta.url)),
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   plugins: [react(), localApi()],
   build: {
     outDir: fileURLToPath(new URL('../dist/espace', import.meta.url)),

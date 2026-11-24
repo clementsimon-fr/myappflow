@@ -114,7 +114,7 @@ export default function AdminDocument() {
             discount_pct: doc.discount_pct,
             vat_rate: doc.vat_rate,
             related_document_id: doc.id,
-            notes: doc.number ? `Facture du devis ${doc.number}` : '',
+            notes: '',
             due_date: due.toISOString().slice(0, 10),
           })
           .select()
@@ -191,7 +191,7 @@ export default function AdminDocument() {
             <button className="btn btn-primary" onClick={save} disabled={!dirty}>Enregistrer</button>
             {doc.status === 'brouillon' && <button className="btn btn-primary" onClick={send}>Publier pour le client</button>}
             <button className="btn" onClick={preview}>Aperçu PDF</button>
-            {doc.kind === 'devis' && <button className="btn" onClick={createInvoice}>Créer la facture de ce devis</button>}
+            {(doc.kind === 'devis' || doc.kind === 'contrat') && <button className="btn" onClick={createInvoice}>Créer la facture de ce {doc.kind}</button>}
             {doc.kind === 'facture' && ['a_regler', 'reglement_declare'].includes(doc.status) && <button className="btn" onClick={acquit}>Acquitter</button>}
             <button className="btn" onClick={() => fileInput.current?.click()}>{doc.file_path ? 'Remplacer le PDF déposé' : 'Déposer un PDF existant'}</button>
             {doc.file_path && <button className="btn" onClick={() => wrap(() => openStoredFile(doc.file_path!))}>Voir le PDF déposé</button>}

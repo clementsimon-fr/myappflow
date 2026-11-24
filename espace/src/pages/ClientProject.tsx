@@ -4,24 +4,30 @@ import { supabase } from '../lib/supabase';
 import { must, useAsync } from '../lib/useAsync';
 import { downloadDocument, getSettings } from '../lib/docActions';
 import { openStoredFile, uploadDocFile } from '../lib/files';
-import { euros, frDate } from '../lib/money';
-import { KIND_PLURAL, PROJECT_STATUS } from '../lib/labels';
-import type { Client, Doc, DocKind, Project, Settings } from '../lib/types';
-import DocumentsTable from '../components/DocumentsTable';
+import { euros } from '../lib/money';
+import { PROJECT_STATUS } from '../lib/labels';
+import type { Client, Doc, Project, Settings } from '../lib/types';
 import ModuleMatrix, { matrixDocIds } from '../components/ModuleMatrix';
 import DocPanel, { docTotal } from '../components/DocPanel';
 import PreviewBanner, { clientVisible } from '../components/PreviewBanner';
 import Roadmap from '../components/Roadmap';
-import { ErrorBox } from '../components/ui';
+import { ErrorBox, StatusBadge } from '../components/ui';
 
-const KINDS: DocKind[] = ['devis', 'facture', 'contrat', 'autre'];
-
-/** Ce que le client doit faire, document par document. */
+/** Documents qui attendent une action du client (mis en évidence dans le tableau). */
 const needsAction = (d: Doc) => (d.kind === 'devis' && d.status === 'a_signer' && !d.signed_file_path) || (d.kind === 'facture' && d.status === 'a_regler');
+
+function DocChip({ doc, onOpen, sub }: { doc: Doc; onOpen: (d: Doc) => void; sub?: string }) {
+  return (
+    <button type="button" className={`doc-chip${needsAction(doc) ? ' doc-chip-todo' : ''}`} onClick={() => onOpen(doc)}>
+      <span className="doc-chip-ref">{doc.number || 'Sans numéro'}</span>
+      {sub && <span className="small muted">{sub}</span>}
+      <StatusBadge kind={doc.kind} status={doc.status} />
+    </button>
+  );
+}
 
 export default function ClientProject({ preview = false }: { preview?: boolean }) {
   const { projectId } = useParams();
-  const [tab, setTab] = useState<'documents' | 'projet' | 'roadmap'>('documents');
   const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -63,7 +69,12 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
   if (!data?.project || !data.client) return <><ErrorBox error={error} /><p>Projet introuvable. <Link to="/">Retour</Link></p></>;
   const { project, client, docs, settings } = data;
   const home = preview ? `/apercu/clients/${client.id}` : '/';
-  const openDoc = docs.find((d) => d.id === openId) ?? null;
+  const byId = new Map(docs.map((d) => [d.id, d]));
+  const openDoc = openId ? byId.get(openId) ?? null : null;
+  const open = (d: Doc) => {
+    setActionError(null);
+    setOpenId(d.id);
+  };
 
   const onFileChosen = async (file: File | undefined) => {
     const doc = openDoc;
@@ -79,22 +90,24 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
   };
 
   const declarePayment = (d: Doc) => {
-    if (!window.confirm(`Confirmez-vous avoir réglé la facture ${d.number} (${euros(docTotal(d))}) ?`)) return;
+    if (!window.confirm(`Confirmez-vous avoir payé la facture ${d.number} (${euros(docTotal(d))}) ?`)) return;
     run(async () => {
       const { error: err } = await supabase.rpc('client_declare_payment', { p_document_id: d.id });
       if (err) throw new Error(err.message);
       await reload();
-    }, `Merci, votre règlement de la facture ${d.number} a été signalé. Nous le vérifions.`);
+    }, `Merci, votre paiement de la facture ${d.number} a été signalé. Nous le vérifions.`);
   };
 
-  // Avec des modules, le tableau par module remplace les listes ; seuls les documents hors tableau restent listés.
-  const useMatrix = project.modules.length > 0;
-  const inMatrix = useMatrix ? matrixDocIds(project.modules, docs) : new Set<string>();
-  const todo = docs.filter(needsAction).sort((a, b) => (a.due_date ?? a.issue_date).localeCompare(b.due_date ?? b.issue_date));
-  const invoices = docs.filter((d) => d.kind === 'facture');
-  const paid = invoices.filter((d) => d.status === 'acquittee').reduce((s, d) => s + docTotal(d), 0);
-  const due = invoices.filter((d) => ['a_regler', 'reglement_declare'].includes(d.status)).reduce((s, d) => s + docTotal(d), 0);
-  const monthly = project.modules.reduce((s, m) => s + (Number(m.monthly_fee) || 0), 0);
+  // Bloc Contrat : les contrats, et les factures rattachées à un contrat.
+  const contracts = docs.filter((d) => d.kind === 'contrat').sort((a, b) => b.issue_date.localeCompare(a.issue_date));
+  const contractInvoices = docs
+    .filter((d) => d.kind === 'facture' && d.related_document_id && byId.get(d.related_document_id)?.kind === 'contrat')
+    .sort((a, b) => b.issue_date.localeCompare(a.issue_date));
+  const monthly = contractInvoices[0] ? docTotal(contractInvoices[0]) : 0;
+  // Ce qui n'entre ni dans le tableau ni dans le contrat (rare) reste accessible en dessous.
+  const placed = new Set([...matrixDocIds(project.modules, docs), ...contracts.map((d) => d.id), ...contractInvoices.map((d) => d.id)]);
+  const others = docs.filter((d) => !placed.has(d.id));
+  const todo = docs.filter(needsAction).length;
 
   return (
     <>
@@ -107,100 +120,86 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
         <span className="badge badge-ok">{PROJECT_STATUS[project.status]}</span>
       </div>
 
-      <ErrorBox error={actionError || error} />
+      <ErrorBox error={openDoc ? null : actionError || error} />
       {notice && <div className="alert alert-ok" role="status">{notice}</div>}
+      {todo > 0 && (
+        <p className="todo-hint">
+          <span className="todo-dot" aria-hidden="true" />
+          {todo === 1 ? 'Un document attend' : `${todo} documents attendent`} une action de votre part : ils sont encadrés en orange. Cliquez dessus pour signer ou payer.
+        </p>
+      )}
       <input ref={fileInput} type="file" accept="application/pdf,image/png,image/jpeg" hidden onChange={(e) => onFileChosen(e.target.files?.[0])} />
 
-      <section className={`card todo${todo.length ? '' : ' todo-done'}`}>
-        {todo.length === 0 ? (
-          <p style={{ margin: 0 }}><strong>Tout est à jour.</strong> <span className="muted">Vous n'avez rien à faire pour le moment.</span></p>
-        ) : (
-          <>
-            <h2 className="todo-title">À faire <span className="badge badge-warn">{todo.length}</span></h2>
-            <ul className="todo-list">
-              {todo.map((d) => (
-                <li key={d.id}>
-                  <div>
-                    <strong>{d.kind === 'devis' ? 'Signer le devis' : 'Régler la facture'} {d.number}</strong>
-                    <span className="small muted">
-                      {d.module || d.title} · {euros(docTotal(d))}{d.kind === 'facture' && d.due_date ? ` · avant le ${frDate(d.due_date)}` : ''}
-                    </span>
-                  </div>
-                  <button className="btn btn-primary btn-sm" onClick={() => setOpenId(d.id)}>{d.kind === 'devis' ? 'Signer' : 'Régler'}</button>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </section>
-
-      {(paid > 0 || due > 0 || monthly > 0) && (
-        <div className="kpis">
-          <div className="kpi"><span>Déjà réglé</span><strong>{euros(paid)}</strong></div>
-          <div className="kpi"><span>Reste à régler</span><strong className={due > 0 ? 'warn' : ''}>{euros(due)}</strong></div>
-          {monthly > 0 && <div className="kpi"><span>Abonnement</span><strong>{euros(monthly)} / mois</strong></div>}
-        </div>
-      )}
-
-      <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'documents'} className={tab === 'documents' ? 'active' : ''} onClick={() => setTab('documents')}>Mes documents</button>
-        <button role="tab" aria-selected={tab === 'projet'} className={tab === 'projet' ? 'active' : ''} onClick={() => setTab('projet')}>Mon application</button>
-        {project.roadmap_visible && <button role="tab" aria-selected={tab === 'roadmap'} className={tab === 'roadmap' ? 'active' : ''} onClick={() => setTab('roadmap')}>Planning</button>}
-      </div>
-
-      {tab === 'documents' && (
-        <div className="stack">
-          {useMatrix && (
-            <section className="card">
-              <p className="small muted" style={{ marginTop: 0 }}>Cliquez sur une référence pour voir le document, le télécharger ou faire l'action demandée.</p>
-              <ModuleMatrix modules={project.modules} docs={docs} onOpen={(d) => setOpenId(d.id)} highlight={needsAction} />
-            </section>
+      <div className="stack">
+        <section className="card">
+          <div className="card-head"><h2>Modules</h2></div>
+          {project.modules.length ? (
+            <ModuleMatrix modules={project.modules} docs={docs} onOpen={open} highlight={needsAction} />
+          ) : (
+            <p className="empty">Aucun module pour le moment.</p>
           )}
-          {KINDS.map((k) => {
-            const list = docs.filter((d) => d.kind === k && !inMatrix.has(d.id));
-            if (!list.length) return null;
-            return (
-              <section key={k} className="card">
-                <div className="card-head"><h2>{KIND_PLURAL[k]}</h2></div>
-                <DocumentsTable docs={list} onRowClick={(d) => setOpenId(d.id)} />
-              </section>
-            );
-          })}
-          {docs.length === 0 && <div className="card"><p className="empty">Aucun document pour le moment.</p></div>}
-        </div>
-      )}
+        </section>
 
-      {tab === 'projet' && (
-        <div className="stack">
-          {project.summary && <div className="card"><p style={{ margin: 0, whiteSpace: 'pre-line' }}>{project.summary}</p></div>}
-          <div className="grid grid-2">
-            {project.modules.map((m, i) => (
-              <div key={i} className="card">
-                <div className="card-head" style={{ marginBottom: 8 }}>
-                  <h3>{m.name}</h3>
-                  {Number(m.monthly_fee) > 0 && <span className="badge">{euros(Number(m.monthly_fee))} / mois</span>}
-                </div>
-                <p className="muted" style={{ margin: 0, whiteSpace: 'pre-line' }}>{m.description.trim()}</p>
-              </div>
-            ))}
+        <section className="card">
+          <div className="card-head">
+            <h2>Contrat</h2>
+            {monthly > 0 && <span className="badge badge-ok">{euros(monthly)} / mois</span>}
           </div>
-        </div>
-      )}
+          {contracts.length === 0 ? (
+            <p className="empty">Pas encore de contrat de maintenance.</p>
+          ) : (
+            <div className="contract-grid">
+              <div>
+                <p className="panel-box-label">Contrat</p>
+                <div className="row">{contracts.map((d) => <DocChip key={d.id} doc={d} onOpen={open} sub={d.title} />)}</div>
+              </div>
+              <div>
+                <p className="panel-box-label">Factures du contrat</p>
+                {contractInvoices.length ? (
+                  <div className="row">{contractInvoices.map((d) => <DocChip key={d.id} doc={d} onOpen={open} sub={`${euros(docTotal(d))}`} />)}</div>
+                ) : (
+                  <span className="doc-chip doc-chip-empty">À venir</span>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
 
-      {tab === 'roadmap' && project.roadmap_visible && (
-        <div className="card"><Roadmap phases={project.roadmap?.phases ?? []} /></div>
-      )}
+        <section className="card">
+          <div className="card-head"><h2>Architecture</h2></div>
+          {project.architecture?.trim() ? (
+            <div className="architecture">{project.architecture}</div>
+          ) : (
+            <p className="muted" style={{ margin: 0 }}>Informations bientôt disponibles : hébergement de votre application, accès, sauvegarde de vos données.</p>
+          )}
+        </section>
+
+        {others.length > 0 && (
+          <section className="card">
+            <div className="card-head"><h2>Autres documents</h2></div>
+            <div className="row">{others.map((d) => <DocChip key={d.id} doc={d} onOpen={open} sub={d.title} />)}</div>
+          </section>
+        )}
+
+        {project.roadmap_visible && (project.roadmap?.phases ?? []).length > 0 && (
+          <section className="card">
+            <div className="card-head"><h2>Planning</h2></div>
+            <Roadmap phases={project.roadmap.phases} />
+          </section>
+        )}
+      </div>
 
       {openDoc && (
         <DocPanel
           doc={openDoc}
-          project={project}
+          client={client}
           settings={settings}
+          related={openDoc.related_document_id ? byId.get(openDoc.related_document_id) : undefined}
           busy={busy}
           error={actionError}
           readOnly={preview}
           onClose={() => setOpenId(null)}
-          onDownload={() => run(() => downloadDocument(openDoc, client))}
+          onDownload={(variant) => run(() => downloadDocument(openDoc, client, variant))}
           onOpenSigned={() => run(() => openStoredFile(openDoc.signed_file_path!))}
           onUploadSigned={() => fileInput.current?.click()}
           onDeclarePayment={() => declarePayment(openDoc)}

@@ -16,10 +16,16 @@ export function clearSettingsCache() {
   settingsCache = null;
 }
 
-/** Ouvre le PDF déposé s'il existe, sinon génère le PDF à partir des données. */
-export async function downloadDocument(doc: Doc, client: Client): Promise<void> {
+/**
+ * Ouvre le PDF déposé s'il existe, sinon génère le PDF à partir des données.
+ * variant « plain » : pour une facture acquittée, la facture d'origine (sans mention ni signature) ;
+ * variant « acquitted » : toujours la version acquittée générée, avec signature.
+ */
+export async function downloadDocument(doc: Doc, client: Client, variant: 'auto' | 'plain' | 'acquitted' = 'auto'): Promise<void> {
   const { buildPdf, pdfFilename } = await import('./pdf');
-  if (doc.file_path) return openStoredFile(doc.file_path, pdfFilename(doc, client));
-  const pdf = buildPdf(doc, client, await getSettings());
-  downloadBlob(pdf.output('blob'), pdfFilename(doc, client));
+  let target = doc;
+  if (variant === 'plain' && doc.kind === 'facture' && doc.status === 'acquittee') target = { ...doc, status: 'a_regler', acquitted_at: null };
+  if (variant !== 'acquitted' && doc.file_path) return openStoredFile(doc.file_path, pdfFilename(target, client));
+  const pdf = buildPdf(target, client, await getSettings());
+  downloadBlob(pdf.output('blob'), pdfFilename(target, client));
 }

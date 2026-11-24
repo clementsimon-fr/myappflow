@@ -35,8 +35,10 @@ export default function AdminProject() {
   const save = async () => {
     setErr(null);
     setMsg(null);
-    const { name, summary, status, modules, roadmap, roadmap_visible } = form;
-    const { error: e } = await supabase.from('projects').update({ name, summary, status, modules, roadmap, roadmap_visible }).eq('id', form.id);
+    const { name, summary, status, modules, roadmap, roadmap_visible, architecture } = form;
+    // La colonne « architecture » n'est envoyée que si elle existe déjà en base (migration 20261124000000).
+    const patch = { name, summary, status, modules, roadmap, roadmap_visible, ...('architecture' in data.project ? { architecture } : {}) };
+    const { error: e } = await supabase.from('projects').update(patch).eq('id', form.id);
     if (e) setErr(e.message);
     else setMsg('Projet enregistré.');
   };
@@ -128,14 +130,20 @@ export default function AdminProject() {
           {form.modules.map((m, i) => (
             <div key={i} className="form-grid" style={{ paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid var(--border)' }}>
               <Field label="Nom"><input value={m.name} onChange={(e) => setModule(i, { name: e.target.value })} /></Field>
-              <Field label="Abonnement mensuel (€ HT, contrat)">
-                <input type="number" min="0" step="1" value={m.monthly_fee ?? ''} placeholder="Aucun" onChange={(e) => setModule(i, { monthly_fee: e.target.value === '' ? null : Number(e.target.value) })} />
-              </Field>
               <div className="row" style={{ alignItems: 'flex-end' }}><button className="btn btn-sm btn-danger" onClick={() => setForm({ ...form, modules: form.modules.filter((_, j) => j !== i) })}>Retirer</button></div>
               <Field label="Description" full><textarea value={m.description} onChange={(e) => setModule(i, { description: e.target.value })} rows={2} /></Field>
             </div>
           ))}
           {!form.modules.length && <p className="muted small">Aucun module.</p>}
+        </section>
+
+        <section className="card">
+          <div className="card-head"><h2>Architecture</h2></div>
+{'architecture' in data.project ? (
+          <Field label="Texte du bloc « Architecture » affiché au client (hébergement, accès, sauvegardes…)" full>
+            <textarea rows={8} value={form.architecture ?? ''} onChange={(e) => setForm({ ...form, architecture: e.target.value })} placeholder="Laissez vide : le client verra « Informations bientôt disponibles »." />
+          </Field>
+          ) : <p className="small muted">Ce champ sera disponible une fois la base mise à jour (colonne « architecture »).</p>}
         </section>
 
         <section className="card">

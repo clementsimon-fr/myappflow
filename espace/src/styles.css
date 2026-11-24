@@ -286,3 +286,34 @@ button.doc-chip:hover { border-color: var(--accent); transform: translateY(-1px)
   .panel { padding: 18px 16px; }
   .todo-list li { flex-wrap: wrap; }
 }
+
+/* ---------- Fiche document v2 (présentée comme le document) ---------- */
+.panel { gap: 14px; width: min(560px, 100%); }
+.panel-title { font-family: var(--font-sans); font-weight: 700; font-size: 19px; margin: 0 0 2px; }
+.btn-close { background: none; border: 0; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 4px 6px; border-radius: 8px; }
+.btn-close:hover { color: var(--text); background: var(--surface-2); }
+.panel-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; font-size: 13px; color: var(--text-muted); }
+.panel-meta b { color: var(--text); font-weight: 600; }
+.panel-box { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; background: var(--bg-alt); }
+.panel-box-label { margin: 0 0 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+.panel-lines { padding: 0; overflow: hidden; }
+.panel-lines table { font-size: 13px; }
+.panel-lines th { background: var(--surface-2); text-transform: none; letter-spacing: 0; font-size: 12px; padding: 8px 12px; }
+.panel-lines td { padding: 10px 12px; vertical-align: top; }
+.line-desc { display: block; margin-top: 3px; line-height: 1.4; }
+.panel-totals { padding: 10px 12px; border-top: 1px solid var(--border); background: var(--surface-2); font-size: 14px; }
+.panel-totals div { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+.panel-totals .grand { font-weight: 700; font-size: 16px; border-top: 1px solid var(--border); margin-top: 6px; padding-top: 8px; }
+.panel-body { white-space: pre-line; font-size: 13px; max-height: 340px; overflow-y: auto; }
+.panel-notes p:not(.panel-box-label) { margin: 0 0 8px; white-space: pre-line; font-size: 14px; }
+.panel-notes .bank { background: none; padding: 0; }
+.panel-actions { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+.btn-block { width: 100%; padding: 11px 16px; }
+.panel-hint { margin: 0; font-size: 13px; color: var(--text-muted); text-align: center; }
+
+/* ---------- Accueil client v3 ---------- */
+.todo-hint { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; padding: 10px 14px; border-radius: 10px; background: var(--warn-soft); color: var(--text); font-size: 14px; }
+.todo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--warn); flex-shrink: 0; }
+.contract-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.architecture { white-space: pre-line; font-size: 15px; }
+.panel > * { flex-shrink: 0; }

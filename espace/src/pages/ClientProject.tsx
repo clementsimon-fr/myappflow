@@ -7,12 +7,14 @@ import { openStoredFile, uploadDocFile } from '../lib/files';
 import { KIND_PLURAL, PROJECT_STATUS } from '../lib/labels';
 import type { Client, Doc, DocKind, Project } from '../lib/types';
 import DocumentsTable from '../components/DocumentsTable';
+import ModuleMatrix from '../components/ModuleMatrix';
+import PreviewBanner, { clientVisible } from '../components/PreviewBanner';
 import Roadmap from '../components/Roadmap';
 import { ErrorBox } from '../components/ui';
 
 const KINDS: DocKind[] = ['devis', 'facture', 'contrat', 'autre'];
 
-export default function ClientProject() {
+export default function ClientProject({ preview = false }: { preview?: boolean }) {
   const { projectId } = useParams();
   const [tab, setTab] = useState<'documents' | 'projet' | 'roadmap'>('documents');
   const [actionError, setActionError] = useState<string | null>(null);
@@ -22,13 +24,16 @@ export default function ClientProject() {
   const uploadTarget = useRef<Doc | null>(null);
 
   const { data, error, loading, reload } = useAsync(async () => {
-    const [project, client, docs] = await Promise.all([
+    const [projectRes, docsRes] = await Promise.all([
       supabase.from('projects').select('*').eq('id', projectId!).maybeSingle(),
-      supabase.from('clients').select('*').maybeSingle(),
       supabase.from('documents').select('*').eq('project_id', projectId!).order('issue_date', { ascending: false }),
     ]);
-    return { project: must(project) as Project | null, client: must(client) as Client, docs: must(docs) as Doc[] };
-  }, [projectId]);
+    const project = must(projectRes) as Project | null;
+    const client = project ? (must(await supabase.from('clients').select('*').eq('id', project.client_id).maybeSingle()) as Client) : null;
+    const docs = must(docsRes) as Doc[];
+    // En vue client, l'administrateur voit tout : on applique ici les mêmes règles que pour le client.
+    return { project, client, docs: preview ? clientVisible(docs) : docs };
+  }, [projectId, preview]);
 
   const run = async (doc: Doc, fn: () => Promise<void>, success?: string) => {
     setActionError(null);
@@ -58,14 +63,16 @@ export default function ClientProject() {
   };
 
   if (loading) return <p className="muted">Chargement…</p>;
-  if (!data?.project) return <><ErrorBox error={error} /><p>Projet introuvable. <Link to="/">Retour</Link></p></>;
+  if (!data?.project || !data.client) return <><ErrorBox error={error} /><p>Projet introuvable. <Link to="/">Retour</Link></p></>;
   const { project, client, docs } = data;
+  const home = preview ? `/apercu/clients/${client.id}` : '/';
+  const noPreview = preview ? 'Action du client, désactivée en vue client' : undefined;
 
   const actions = (d: Doc) => (
     <>
       <button className="btn btn-sm" disabled={busyId === d.id} onClick={() => run(d, () => downloadDocument(d, client))}>PDF</button>
       {d.kind === 'devis' && d.status === 'a_signer' && !d.signed_file_path && (
-        <button className="btn btn-sm btn-primary" disabled={busyId === d.id} onClick={() => { uploadTarget.current = d; fileInput.current?.click(); }}>Déposer le devis signé</button>
+        <button className="btn btn-sm btn-primary" disabled={preview || busyId === d.id} title={noPreview} onClick={() => { uploadTarget.current = d; fileInput.current?.click(); }}>Déposer le devis signé</button>
       )}
       {d.signed_file_path && (
         <button className="btn btn-sm" onClick={() => run(d, () => openStoredFile(d.signed_file_path!))}>Devis signé</button>
@@ -73,7 +80,8 @@ export default function ClientProject() {
       {d.kind === 'facture' && d.status === 'a_regler' && (
         <button
           className="btn btn-sm btn-primary"
-          disabled={busyId === d.id}
+          disabled={preview || busyId === d.id}
+          title={noPreview}
           onClick={() => {
             if (!window.confirm(`Confirmez-vous avoir réglé la facture ${d.number} ?`)) return;
             run(d, async () => {
@@ -93,9 +101,10 @@ export default function ClientProject() {
 
   return (
     <>
+      {preview && <PreviewBanner clientName={client.name} backTo={`/projets/${project.id}`} />}
       <div className="page-head">
         <div>
-          <p className="crumbs"><Link to="/">Mes projets</Link> / {client.name}</p>
+          <p className="crumbs"><Link to={home}>Mes projets</Link> / {client.name}</p>
           <h1>{project.name}</h1>
         </div>
         <span className="badge badge-ok">{PROJECT_STATUS[project.status]}</span>
@@ -117,6 +126,12 @@ export default function ClientProject() {
             <div className="alert alert-info">
               {pending.length === 1 ? 'Un document attend' : `${pending.length} documents attendent`} une action de votre part : {pending.map((d) => d.number).join(', ')}.
             </div>
+          )}
+          {project.modules.length > 0 && docs.some((d) => d.module) && (
+            <section className="card">
+              <div className="card-head"><h2>Par module</h2></div>
+              <ModuleMatrix modules={project.modules} docs={docs} busyId={busyId} onOpen={(d) => run(d, () => downloadDocument(d, client))} />
+            </section>
           )}
           {KINDS.map((k) => {
             const list = docs.filter((d) => d.kind === k);

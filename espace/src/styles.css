@@ -200,3 +200,25 @@ tr.clickable:hover td { background: var(--surface-2); }
   .card { padding: 16px; }
   .table-wrap { margin: 0 -16px; padding: 0 16px; }
 }
+
+/* ---------- Tableau par module (devis / facture de lancement / facture de clôture) ---------- */
+.matrix td { vertical-align: top; }
+.matrix-module { background: none; border: 0; padding: 0; color: var(--text); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.matrix-module .chevron { display: inline-block; color: var(--text-muted); margin-left: 4px; transition: transform .15s ease; }
+.matrix-module .chevron.open { transform: rotate(90deg); }
+.matrix-cell { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink); border: 0; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.pill::before { content: ''; width: 10px; height: 12px; border: 1.5px solid currentColor; border-radius: 2px; opacity: .85; }
+.pill:hover { filter: brightness(1.08); }
+.pill:disabled { opacity: .6; cursor: wait; }
+.pill-empty { background: var(--surface-2); color: var(--text-muted); cursor: default; opacity: .7; }
+.pill-empty:hover { filter: none; }
+.matrix-desc td { background: var(--bg-alt); }
+.preview-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.preview-bar .btn { color: var(--info); border-color: currentColor; }
+@media (max-width: 640px) {
+  table.table-cards.matrix td[data-label] > * { text-align: left; align-items: flex-end; }
+}

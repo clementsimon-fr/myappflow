@@ -5,6 +5,7 @@ import { must, useAsync } from '../../lib/useAsync';
 import { KIND_LABEL, PHASE_STATUS, PROJECT_STATUS } from '../../lib/labels';
 import type { Client, Doc, DocKind, PhaseStatus, Project } from '../../lib/types';
 import DocumentsTable from '../../components/DocumentsTable';
+import ModuleMatrix from '../../components/ModuleMatrix';
 import { ErrorBox, Field } from '../../components/ui';
 
 const NEW_KINDS: DocKind[] = ['devis', 'facture', 'contrat', 'autre'];
@@ -81,7 +82,10 @@ export default function AdminProject() {
           <p className="crumbs"><Link to="/clients">Clients</Link> / <Link to={`/clients/${data.client.id}`}>{data.client.name}</Link></p>
           <h1>{data.project.name}</h1>
         </div>
-        <button className="btn btn-primary" onClick={save}>Enregistrer le projet</button>
+        <div className="row">
+          <Link to={`/apercu/projets/${data.project.id}`} className="btn">Vue client</Link>
+          <button className="btn btn-primary" onClick={save}>Enregistrer le projet</button>
+        </div>
       </div>
       <ErrorBox error={err} />
       {msg && <div className="alert alert-ok">{msg}</div>}
@@ -94,6 +98,11 @@ export default function AdminProject() {
               {NEW_KINDS.map((k) => <button key={k} className="btn btn-sm" onClick={() => newDocument(k)}>+ {KIND_LABEL[k]}</button>)}
             </div>
           </div>
+          {data.project.modules.length > 0 && (
+            <div style={{ marginBottom: 18 }}>
+              <ModuleMatrix modules={data.project.modules} docs={data.docs} onOpen={(d) => navigate(`/documents/${d.id}`)} />
+            </div>
+          )}
           <DocumentsTable docs={data.docs} showKind onRowClick={(d) => navigate(`/documents/${d.id}`)} empty="Aucun document. Créez un devis pour commencer." />
           <p className="small muted" style={{ marginTop: 10 }}>Le client ne voit que les documents marqués « visible » et qui ne sont plus en brouillon.</p>
         </section>

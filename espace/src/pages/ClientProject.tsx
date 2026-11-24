@@ -10,7 +10,6 @@ import type { Client, Doc, Project, Settings } from '../lib/types';
 import ModuleMatrix, { matrixDocIds } from '../components/ModuleMatrix';
 import DocPanel, { docTotal } from '../components/DocPanel';
 import PreviewBanner, { clientVisible } from '../components/PreviewBanner';
-import Roadmap from '../components/Roadmap';
 import { ErrorBox, StatusBadge } from '../components/ui';
 
 /** Documents qui attendent une action du client (mis en évidence dans le tableau). */
@@ -107,7 +106,6 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
   // Ce qui n'entre ni dans le tableau ni dans le contrat (rare) reste accessible en dessous.
   const placed = new Set([...matrixDocIds(project.modules, docs), ...contracts.map((d) => d.id), ...contractInvoices.map((d) => d.id)]);
   const others = docs.filter((d) => !placed.has(d.id));
-  const todo = docs.filter(needsAction).length;
 
   return (
     <>
@@ -122,12 +120,6 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
 
       <ErrorBox error={openDoc ? null : actionError || error} />
       {notice && <div className="alert alert-ok" role="status">{notice}</div>}
-      {todo > 0 && (
-        <p className="todo-hint">
-          <span className="todo-dot" aria-hidden="true" />
-          {todo === 1 ? 'Un document attend' : `${todo} documents attendent`} une action de votre part : ils sont encadrés en orange. Cliquez dessus pour signer ou payer.
-        </p>
-      )}
       <input ref={fileInput} type="file" accept="application/pdf,image/png,image/jpeg" hidden onChange={(e) => onFileChosen(e.target.files?.[0])} />
 
       <div className="stack">
@@ -170,7 +162,7 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
           {project.architecture?.trim() ? (
             <div className="architecture">{project.architecture}</div>
           ) : (
-            <p className="muted" style={{ margin: 0 }}>Informations bientôt disponibles : hébergement de votre application, accès, sauvegarde de vos données.</p>
+            <p className="muted" style={{ margin: 0 }}>À venir</p>
           )}
         </section>
 
@@ -181,12 +173,6 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
           </section>
         )}
 
-        {project.roadmap_visible && (project.roadmap?.phases ?? []).length > 0 && (
-          <section className="card">
-            <div className="card-head"><h2>Planning</h2></div>
-            <Roadmap phases={project.roadmap.phases} />
-          </section>
-        )}
       </div>
 
       {openDoc && (

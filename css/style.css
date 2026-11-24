@@ -119,6 +119,22 @@ blockquote{ margin: 0; }
   font-size: 20px;
   color: var(--text);
 }
+.header-actions{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.client-link{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 14px;
+  transition: border-color .2s ease;
+  white-space: nowrap;
+}
+.client-link:hover{ border-color: var(--accent); }
 .theme-toggle{
   display: flex;
   align-items: center;
@@ -553,5 +569,7 @@ a.contact-card:hover{ border-color: var(--accent); }
   .cta-row .btn{ padding: 12px 14px; font-size: 13px; }
   .header-inner{ padding: 12px 16px; }
   .theme-label{ display: none; }
+  .header-actions{ gap: 8px; }
+  .client-link{ padding: 6px 11px; font-size: 12px; }
   .theme-btn{ padding: 6px 9px; font-size: 11px; }
 }

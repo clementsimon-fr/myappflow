@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router';
+import { Link, Navigate, useParams } from 'react-router';
 import { supabase } from '../lib/supabase';
 import { must, useAsync } from '../lib/useAsync';
 import { PROJECT_STATUS } from '../lib/labels';
@@ -24,6 +24,8 @@ export default function ClientHome({ preview = false }: { preview?: boolean }) {
   }, [preview, clientId]);
 
   if (loading) return <p className="muted">Chargement…</p>;
+  // Un seul projet : on y va directement, sans page intermédiaire.
+  if (data && data.projects.length === 1) return <Navigate to={preview ? `/apercu/projets/${data.projects[0].id}` : `/projets/${data.projects[0].id}`} replace />;
   return (
     <>
       {preview && <PreviewBanner clientName={data?.client?.name ?? ''} backTo={`/clients/${clientId}`} />}

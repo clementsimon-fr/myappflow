@@ -27,6 +27,8 @@ export interface Client {
 export interface ProjectModule {
   name: string;
   description: string;
+  /** Abonnement mensuel du module (€ HT/mois), couvert par le contrat de maintenance. */
+  monthly_fee?: number | null;
 }
 
 export type PhaseStatus = 'a_venir' | 'en_cours' | 'termine';

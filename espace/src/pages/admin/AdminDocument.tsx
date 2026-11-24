@@ -5,6 +5,7 @@ import { must, useAsync } from '../../lib/useAsync';
 import { computeTotals, euros, lineTotal } from '../../lib/money';
 import { KIND_LABEL, STATUSES } from '../../lib/labels';
 import { getSettings } from '../../lib/docActions';
+import { createMonthlyInvoice } from '../../lib/adminApi';
 import { downloadBlob, openStoredFile, uploadDocFile } from '../../lib/files';
 import type { Client, Doc, DocLine, Project } from '../../lib/types';
 import { ErrorBox, Field, StatusBadge } from '../../components/ui';
@@ -123,6 +124,14 @@ export default function AdminDocument() {
       navigate(`/documents/${inv.id}`);
     });
 
+  const createMonthly = () =>
+    wrap(async () => {
+      if (dirty) await persist();
+      const { created, skipped } = await createMonthlyInvoice(doc.id);
+      if (created[0]) return navigate(`/documents/${created[0].id}`);
+      throw new Error(skipped[0]?.reason || 'Aucune facture créée');
+    });
+
   const onFile = (file: File | undefined) => {
     if (!file) return;
     wrap(async () => {
@@ -192,6 +201,7 @@ export default function AdminDocument() {
             {doc.status === 'brouillon' && <button className="btn btn-primary" onClick={send}>Publier pour le client</button>}
             <button className="btn" onClick={preview}>Aperçu PDF</button>
             {(doc.kind === 'devis' || doc.kind === 'contrat') && <button className="btn" onClick={createInvoice}>Créer la facture de ce {doc.kind}</button>}
+            {doc.kind === 'contrat' && doc.status === 'actif' && <button className="btn" onClick={createMonthly} title="Copie la dernière facture du contrat pour le mois en cours (fait automatiquement le 1er du mois)">Créer la mensualité du mois</button>}
             {doc.kind === 'facture' && ['a_regler', 'reglement_declare'].includes(doc.status) && <button className="btn" onClick={acquit}>Acquitter</button>}
             <button className="btn" onClick={() => fileInput.current?.click()}>{doc.file_path ? 'Remplacer le PDF déposé' : 'Déposer un PDF existant'}</button>
             {doc.file_path && <button className="btn" onClick={() => wrap(() => openStoredFile(doc.file_path!))}>Voir le PDF déposé</button>}

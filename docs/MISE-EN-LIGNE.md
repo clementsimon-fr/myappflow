@@ -46,3 +46,15 @@ SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/import-portfolio.mjs
 ## 5. Donner l'accès à un client
 
 *Clients → le client → Accès à l'espace client* : saisir un identifiant, cliquer sur « Créer l'accès ». Le message à envoyer (adresse, identifiant, mot de passe provisoire) s'affiche une seule fois. Le client choisit son propre mot de passe à la première connexion.
+
+## Mensualités des contrats de maintenance
+
+Le 1er de chaque mois à 7 h (heure de Paris), Vercel appelle `/api/monthly-invoices` (voir `crons` dans `vercel.json`).
+Pour chaque contrat **actif**, la fonction copie la dernière facture du contrat (lignes, TVA, échéancier) en une nouvelle
+facture « à régler », visible par le client, datée du jour, échéance à 30 jours, titre « … de <mois> <année> ».
+Rien n'est créé si le contrat n'a encore aucune facture, ou si la facture du mois existe déjà.
+
+- Variable Vercel à ajouter (Production) : `CRON_SECRET`, une longue chaîne aléatoire (16 caractères minimum).
+  Sans elle, la tâche planifiée est refusée et aucune facture n'est créée.
+- Dans l'admin, sur la fiche d'un contrat actif, le bouton « Créer la mensualité du mois » fait la même chose à la demande.
+- Pour arrêter la facturation d'un contrat, passez son statut à « Terminé ».

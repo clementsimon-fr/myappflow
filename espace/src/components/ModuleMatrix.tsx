@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import type { Doc, Project } from '../lib/types';
 import { StatusBadge } from './ui';
 
@@ -12,6 +12,13 @@ const COLUMNS: { slot: Slot; title: string; pill: string }[] = [
 
 const norm = (s: string) => s.trim().toLowerCase();
 const isCloture = (d: Doc) => /cl[oô]ture/i.test(`${d.title} ${d.number}`);
+
+/** Documents qui apparaissent dans le tableau (les autres sont listés à part). */
+export function matrixDocIds(modules: Project['modules'], docs: Doc[]): Set<string> {
+  const ids = new Set<string>();
+  for (const m of modules) for (const d of Object.values(moduleSlots(m.name, docs))) if (d) ids.add(d.id);
+  return ids;
+}
 
 /** Range les devis et factures d'un module dans les trois cases du tableau. */
 export function moduleSlots(moduleName: string, docs: Doc[]): Record<Slot, Doc | undefined> {
@@ -29,9 +36,11 @@ interface Props {
   docs: Doc[];
   onOpen: (doc: Doc) => void;
   busyId?: string | null;
+  /** Boutons affichés sous le statut (ex. « Déposer le devis signé »). */
+  actions?: (doc: Doc) => ReactNode;
 }
 
-export default function ModuleMatrix({ modules, docs, onOpen, busyId }: Props) {
+export default function ModuleMatrix({ modules, docs, onOpen, busyId, actions }: Props) {
   const [open, setOpen] = useState<number | null>(null);
   if (!modules.length) return null;
   return (
@@ -67,6 +76,7 @@ export default function ModuleMatrix({ modules, docs, onOpen, busyId }: Props) {
                             <span className="pill pill-empty">{c.pill}</span>
                           )}
                           {d && <StatusBadge kind={d.kind} status={d.status} />}
+                          {d && actions?.(d)}
                         </span>
                       </td>
                     );

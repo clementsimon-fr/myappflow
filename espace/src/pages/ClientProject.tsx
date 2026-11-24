@@ -7,7 +7,7 @@ import { openStoredFile, uploadDocFile } from '../lib/files';
 import { KIND_PLURAL, PROJECT_STATUS } from '../lib/labels';
 import type { Client, Doc, DocKind, Project } from '../lib/types';
 import DocumentsTable from '../components/DocumentsTable';
-import ModuleMatrix from '../components/ModuleMatrix';
+import ModuleMatrix, { matrixDocIds } from '../components/ModuleMatrix';
 import PreviewBanner, { clientVisible } from '../components/PreviewBanner';
 import Roadmap from '../components/Roadmap';
 import { ErrorBox } from '../components/ui';
@@ -68,9 +68,9 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
   const home = preview ? `/apercu/clients/${client.id}` : '/';
   const noPreview = preview ? 'Action du client, désactivée en vue client' : undefined;
 
-  const actions = (d: Doc) => (
+  const actions = (d: Doc, withPdf = true) => (
     <>
-      <button className="btn btn-sm" disabled={busyId === d.id} onClick={() => run(d, () => downloadDocument(d, client))}>PDF</button>
+      {withPdf && <button className="btn btn-sm" disabled={busyId === d.id} onClick={() => run(d, () => downloadDocument(d, client))}>PDF</button>}
       {d.kind === 'devis' && d.status === 'a_signer' && !d.signed_file_path && (
         <button className="btn btn-sm btn-primary" disabled={preview || busyId === d.id} title={noPreview} onClick={() => { uploadTarget.current = d; fileInput.current?.click(); }}>Déposer le devis signé</button>
       )}
@@ -97,6 +97,9 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
     </>
   );
 
+  // Avec des modules, le tableau par module remplace les listes ; seuls les documents hors tableau (contrats…) restent listés.
+  const useMatrix = project.modules.length > 0;
+  const inMatrix = useMatrix ? matrixDocIds(project.modules, docs) : new Set<string>();
   const pending = docs.filter((d) => ['a_signer', 'a_regler'].includes(d.status) && !d.signed_file_path);
 
   return (
@@ -127,14 +130,13 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
               {pending.length === 1 ? 'Un document attend' : `${pending.length} documents attendent`} une action de votre part : {pending.map((d) => d.number).join(', ')}.
             </div>
           )}
-          {project.modules.length > 0 && docs.some((d) => d.module) && (
+          {useMatrix && (
             <section className="card">
-              <div className="card-head"><h2>Par module</h2></div>
-              <ModuleMatrix modules={project.modules} docs={docs} busyId={busyId} onOpen={(d) => run(d, () => downloadDocument(d, client))} />
+              <ModuleMatrix modules={project.modules} docs={docs} busyId={busyId} onOpen={(d) => run(d, () => downloadDocument(d, client))} actions={(d) => actions(d, false)} />
             </section>
           )}
           {KINDS.map((k) => {
-            const list = docs.filter((d) => d.kind === k);
+            const list = docs.filter((d) => d.kind === k && !inMatrix.has(d.id));
             if (!list.length) return null;
             return (
               <section key={k} className="card">

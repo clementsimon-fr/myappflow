@@ -35,7 +35,7 @@ export default async function handler(req, res) {
       const password = String(body.password || '');
       const role = body.role === 'admin' ? 'admin' : 'client';
       if (!USERNAME_RE.test(username)) return send(res, 400, { error: 'Identifiant invalide (3 à 40 caractères : lettres, chiffres, . _ -)' });
-      if (password.length < 10) return send(res, 400, { error: 'Mot de passe trop court (10 caractères minimum)' });
+      if (password.length < 6) return send(res, 400, { error: 'Mot de passe trop court (6 caractères minimum)' });
       if (role === 'client' && !body.client_id) return send(res, 400, { error: 'Client manquant' });
 
       const { data: created, error } = await admin.auth.admin.createUser({
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
 
     if (action === 'reset_password') {
       const password = String(body.password || '');
-      if (password.length < 10) return send(res, 400, { error: 'Mot de passe trop court (10 caractères minimum)' });
+      if (password.length < 6) return send(res, 400, { error: 'Mot de passe trop court (6 caractères minimum)' });
       const { error } = await admin.auth.admin.updateUserById(body.user_id, { password });
       if (error) return send(res, 400, { error: error.message });
       await admin.from('profiles').update({ must_change_password: true }).eq('id', body.user_id);

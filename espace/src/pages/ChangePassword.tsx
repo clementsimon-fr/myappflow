@@ -16,7 +16,7 @@ export default function ChangePassword({ forced = false }: { forced?: boolean })
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (password.length < 10) return setError('Le mot de passe doit contenir au moins 10 caractères.');
+    if (password.length < 6) return setError('Le mot de passe doit contenir au moins 6 caractères.');
     if (password !== confirm) return setError('Les deux mots de passe ne correspondent pas.');
     setBusy(true);
     const { error: err } = await supabase.auth.updateUser({ password });
@@ -42,7 +42,7 @@ export default function ChangePassword({ forced = false }: { forced?: boolean })
       {!forced && <h2>Changer mon mot de passe</h2>}
       <ErrorBox error={error} />
       {done && <div className="alert alert-ok">Mot de passe modifié.</div>}
-      <Field label="Nouveau mot de passe (10 caractères minimum)">
+      <Field label="Nouveau mot de passe (6 caractères minimum)">
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required />
       </Field>
       <Field label="Confirmer">

@@ -6,7 +6,7 @@ import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
 import ClientHome from './pages/ClientHome';
 import ClientProject from './pages/ClientProject';
-import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminProjects from './pages/admin/AdminProjects';
 import AdminClients from './pages/admin/AdminClients';
 import AdminClient from './pages/admin/AdminClient';
 import AdminProject from './pages/admin/AdminProject';
@@ -48,7 +48,7 @@ export default function App() {
       <Route element={<Layout />}>
         {isAdmin ? (
           <>
-            <Route index element={<AdminDashboard />} />
+            <Route index element={<AdminProjects />} />
             <Route path="clients" element={<AdminClients />} />
             <Route path="clients/:clientId" element={<AdminClient />} />
             <Route path="projets/:projectId" element={<AdminProject />} />

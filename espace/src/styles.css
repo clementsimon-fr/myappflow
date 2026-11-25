@@ -317,3 +317,17 @@ button.doc-chip:hover { border-color: var(--accent); transform: translateY(-1px)
 .contract-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .architecture { white-space: pre-line; font-size: 15px; }
 .panel > * { flex-shrink: 0; }
+
+/* Admin v3 : menu du compte, blocs repliables, tuiles projet */
+.user-menu { position: relative; }
+.user-menu > summary { list-style: none; cursor: pointer; padding: 6px 10px; border-radius: 8px; color: var(--text-muted); }
+.user-menu > summary::-webkit-details-marker { display: none; }
+.user-menu > summary:hover, .user-menu[open] > summary { color: var(--text); background: var(--surface-2); }
+.user-menu-list { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 220px; display: flex; flex-direction: column; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, .12); }
+.user-menu-list a, .user-menu-list button { text-align: left; padding: 8px 10px; border-radius: 8px; color: var(--text); font: inherit; font-size: 14px; background: none; border: 0; cursor: pointer; }
+.user-menu-list a:hover, .user-menu-list button:hover { background: var(--surface-2); text-decoration: none; }
+.fold { margin-top: 16px; }
+.fold > summary { cursor: pointer; color: var(--text-muted); font-size: 14px; padding: 6px 0; }
+.fold[open] > summary { margin-bottom: 10px; }
+.project-tile h3 { margin: 4px 0 10px; }
+#acces, #fiche { scroll-margin-top: 80px; }

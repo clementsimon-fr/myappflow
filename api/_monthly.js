@@ -14,11 +14,24 @@ function addDays(iso, days) {
   return d.toISOString().slice(0, 10);
 }
 
-/** « Contrat de maintenance · mensualité » -> « Contrat de maintenance · mensualité de décembre 2026 ». */
-export function monthlyTitle(title, iso) {
-  const base = String(title || 'Contrat de maintenance · mensualité').replace(/\s+de\s+\S+\s+\d{4}\s*$/i, '').trim();
+/** « décembre 2026 » pour une date AAAA-MM-JJ. */
+export function monthLabel(iso) {
   const [y, m] = iso.split('-');
-  return `${base} de ${MONTHS[Number(m) - 1]} ${y}`;
+  return `${MONTHS[Number(m) - 1]} ${y}`;
+}
+
+/** « Contrat de maintenance · mensualité » -> « Contrat de maintenance · mensualité · mois de décembre 2026 ». */
+export function monthlyTitle(title, iso) {
+  const base = String(title || 'Contrat de maintenance · mensualité')
+    .replace(/\s*·?\s*(mois\s+)?de\s+\S+\s+\d{4}\s*$/i, '')
+    .trim();
+  return `${base} · mois de ${monthLabel(iso)}`;
+}
+
+/** Ajoute (ou remplace) la ligne « Période facturée » en tête des notes. */
+export function periodNotes(notes, iso) {
+  const rest = String(notes || '').split('\n').filter((l) => !/^Période facturée/i.test(l)).join('\n').trim();
+  return [`Période facturée : mois de ${monthLabel(iso)}.`, rest].filter(Boolean).join('\n');
 }
 
 /** Prochain numéro FAC-AAAA-NNN, d'après les numéros existants. */
@@ -79,7 +92,7 @@ export function planMonthlyInvoices(contracts, invoices, today, only) {
       discount_pct: model.discount_pct,
       vat_rate: model.vat_rate,
       payment_terms: model.payment_terms || '',
-      notes: model.notes || '',
+      notes: periodNotes(model.notes, today),
       related_document_id: c.id,
     });
   }

@@ -50,6 +50,8 @@ export interface Project {
   roadmap_visible: boolean;
   /** Bloc « Architecture » : hébergement, accès, sauvegardes… (texte libre). */
   architecture: string;
+  /** Adresse de l'application du client (bouton « Application » de l'admin). */
+  app_url?: string;
   created_at: string;
 }
 

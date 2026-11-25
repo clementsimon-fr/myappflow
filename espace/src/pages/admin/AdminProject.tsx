@@ -2,13 +2,23 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { supabase } from '../../lib/supabase';
 import { must, useAsync } from '../../lib/useAsync';
-import { KIND_LABEL, PHASE_STATUS, PROJECT_STATUS } from '../../lib/labels';
-import type { Client, Doc, DocKind, PhaseStatus, Project } from '../../lib/types';
-import DocumentsTable from '../../components/DocumentsTable';
-import ModuleMatrix from '../../components/ModuleMatrix';
-import { ErrorBox, Field } from '../../components/ui';
+import { euros } from '../../lib/money';
+import { KIND_LABEL, PROJECT_STATUS } from '../../lib/labels';
+import type { Client, Doc, DocKind, Project } from '../../lib/types';
+import ModuleMatrix, { matrixDocIds } from '../../components/ModuleMatrix';
+import { docTotal } from '../../components/DocPanel';
+import { ErrorBox, Field, StatusBadge } from '../../components/ui';
+import { adminTodo } from './AdminProjects';
 
-const NEW_KINDS: DocKind[] = ['devis', 'facture', 'contrat', 'autre'];
+function Chip({ doc, sub, onOpen }: { doc: Doc; sub?: string; onOpen: (d: Doc) => void }) {
+  return (
+    <button type="button" className={`doc-chip${adminTodo(doc) ? ' doc-chip-todo' : ''}`} onClick={() => onOpen(doc)}>
+      <span className="doc-chip-ref">{doc.number || 'Sans numéro'}</span>
+      {sub && <span className="small muted">{sub}</span>}
+      <StatusBadge kind={doc.kind} status={doc.status} />
+    </button>
+  );
+}
 
 export default function AdminProject() {
   const { projectId } = useParams();
@@ -27,17 +37,18 @@ export default function AdminProject() {
   }, [projectId]);
 
   useEffect(() => {
-    if (data) setForm({ ...data.project, roadmap: { phases: data.project.roadmap?.phases ?? [] } });
+    if (data) setForm({ ...data.project });
   }, [data]);
 
   if (loading || !form || !data) return <><ErrorBox error={error} /><p className="muted">Chargement…</p></>;
+  const has = (col: string) => col in data.project;
 
   const save = async () => {
     setErr(null);
     setMsg(null);
-    const { name, summary, status, modules, roadmap, roadmap_visible, architecture } = form;
-    // La colonne « architecture » n'est envoyée que si elle existe déjà en base (migration 20261124000000).
-    const patch = { name, summary, status, modules, roadmap, roadmap_visible, ...('architecture' in data.project ? { architecture } : {}) };
+    const { name, status, modules, architecture, app_url } = form;
+    // Les colonnes « architecture » et « app_url » ne sont envoyées que si elles existent déjà en base.
+    const patch = { name, status, modules, ...(has('architecture') ? { architecture } : {}), ...(has('app_url') ? { app_url } : {}) };
     const { error: e } = await supabase.from('projects').update(patch).eq('id', form.id);
     if (e) setErr(e.message);
     else setMsg('Projet enregistré.');
@@ -68,25 +79,38 @@ export default function AdminProject() {
     if (!window.confirm(`Supprimer le projet ${form.name} et tous ses documents ? Cette action est définitive.`)) return;
     const { error: e } = await supabase.from('projects').delete().eq('id', form.id);
     if (e) return setErr(e.message);
-    navigate(`/clients/${form.client_id}`);
+    navigate('/');
   };
 
-  const phases = form.roadmap.phases;
-  const setPhase = (i: number, patch: Partial<(typeof phases)[number]>) =>
-    setForm({ ...form, roadmap: { phases: phases.map((p, j) => (j === i ? { ...p, ...patch } : p)) } });
   const setModule = (i: number, patch: Partial<Project['modules'][number]>) =>
     setForm({ ...form, modules: form.modules.map((m, j) => (j === i ? { ...m, ...patch } : m)) });
+
+  const docs = data.docs;
+  const open = (d: Doc) => navigate(`/documents/${d.id}`);
+  const byId = new Map(docs.map((d) => [d.id, d]));
+  const contracts = docs.filter((d) => d.kind === 'contrat');
+  const contractInvoices = docs.filter((d) => d.kind === 'facture' && d.related_document_id && byId.get(d.related_document_id)?.kind === 'contrat');
+  const placed = new Set([...matrixDocIds(data.project.modules, docs), ...contracts.map((d) => d.id), ...contractInvoices.map((d) => d.id)]);
+  const others = docs.filter((d) => !placed.has(d.id));
+  const appUrl = data.project.app_url?.trim();
+  const clientUrl = `/clients/${data.client.id}`;
 
   return (
     <>
       <div className="page-head">
         <div>
-          <p className="crumbs"><Link to="/clients">Clients</Link> / <Link to={`/clients/${data.client.id}`}>{data.client.name}</Link></p>
+          <p className="crumbs"><Link to="/">Projets</Link> / {data.client.name}</p>
           <h1>{data.project.name}</h1>
         </div>
         <div className="row">
+          {appUrl ? (
+            <a href={appUrl} target="_blank" rel="noreferrer" className="btn btn-primary">Application</a>
+          ) : (
+            <button type="button" className="btn" disabled title="Renseignez l'adresse de l'application dans « Réglages du projet », en bas de page">Application</button>
+          )}
+          <Link to={`${clientUrl}#acces`} className="btn">Accès client</Link>
+          <Link to={`${clientUrl}#fiche`} className="btn">Fiche client</Link>
           <Link to={`/apercu/projets/${data.project.id}`} className="btn">Vue client</Link>
-          <button className="btn btn-primary" onClick={save}>Enregistrer le projet</button>
         </div>
       </div>
       <ErrorBox error={err} />
@@ -95,22 +119,76 @@ export default function AdminProject() {
       <div className="stack">
         <section className="card">
           <div className="card-head">
-            <h2>Documents</h2>
+            <h2>Modules</h2>
             <div className="row">
-              {NEW_KINDS.map((k) => <button key={k} className="btn btn-sm" onClick={() => newDocument(k)}>+ {KIND_LABEL[k]}</button>)}
+              <button className="btn btn-sm" onClick={() => newDocument('devis')}>+ Devis</button>
+              <button className="btn btn-sm" onClick={() => newDocument('facture')}>+ Facture</button>
             </div>
           </div>
-          {data.project.modules.length > 0 && (
-            <div style={{ marginBottom: 18 }}>
-              <ModuleMatrix modules={data.project.modules} docs={data.docs} onOpen={(d) => navigate(`/documents/${d.id}`)} />
+          {data.project.modules.length ? <ModuleMatrix modules={data.project.modules} docs={docs} onOpen={open} highlight={adminTodo} /> : <p className="empty">Aucun module.</p>}
+          <details className="fold">
+            <summary>Modifier les modules</summary>
+            {form.modules.map((m, i) => (
+              <div key={i} className="form-grid" style={{ paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid var(--border)' }}>
+                <Field label="Nom"><input value={m.name} onChange={(e) => setModule(i, { name: e.target.value })} /></Field>
+                <div className="row" style={{ alignItems: 'flex-end' }}><button className="btn btn-sm btn-danger" onClick={() => setForm({ ...form, modules: form.modules.filter((_, j) => j !== i) })}>Retirer</button></div>
+                <Field label="Description" full><textarea value={m.description} onChange={(e) => setModule(i, { description: e.target.value })} rows={2} /></Field>
+              </div>
+            ))}
+            <div className="row">
+              <button className="btn btn-sm" onClick={() => setForm({ ...form, modules: [...form.modules, { name: '', description: '' }] })}>+ Module</button>
+              <button className="btn btn-sm btn-primary" onClick={save}>Enregistrer les modules</button>
             </div>
-          )}
-          <DocumentsTable docs={data.docs} showKind onRowClick={(d) => navigate(`/documents/${d.id}`)} empty="Aucun document. Créez un devis pour commencer." />
-          <p className="small muted" style={{ marginTop: 10 }}>Le client ne voit que les documents marqués « visible » et qui ne sont plus en brouillon.</p>
+          </details>
         </section>
 
         <section className="card">
-          <div className="card-head"><h2>Présentation</h2></div>
+          <div className="card-head">
+            <h2>Contrat</h2>
+            {contracts.length === 0 && <button className="btn btn-sm" onClick={() => newDocument('contrat')}>+ Contrat</button>}
+          </div>
+          {contracts.length === 0 ? (
+            <p className="empty">Pas encore de contrat de maintenance.</p>
+          ) : (
+            <div className="contract-grid">
+              <div>
+                <p className="panel-box-label">Contrat</p>
+                <div className="row">{contracts.map((d) => <Chip key={d.id} doc={d} onOpen={open} sub={d.title} />)}</div>
+              </div>
+              <div>
+                <p className="panel-box-label">Factures du contrat</p>
+                {contractInvoices.length ? (
+                  <div className="row">{contractInvoices.map((d) => <Chip key={d.id} doc={d} onOpen={open} sub={euros(docTotal(d))} />)}</div>
+                ) : (
+                  <span className="doc-chip doc-chip-empty">Aucune : ouvrez le contrat puis « Créer la facture de ce contrat »</span>
+                )}
+              </div>
+            </div>
+          )}
+          <p className="small muted" style={{ margin: '12px 0 0' }}>Cliquez sur un document pour le modifier. Les mensualités se créent toutes seules le 1er du mois.</p>
+        </section>
+
+        <section className="card">
+          <div className="card-head">
+            <h2>Architecture</h2>
+            {has('architecture') && <button className="btn btn-sm btn-primary" onClick={save}>Enregistrer</button>}
+          </div>
+          {has('architecture') ? (
+            <textarea rows={6} value={form.architecture ?? ''} onChange={(e) => setForm({ ...form, architecture: e.target.value })} placeholder="Laissez vide : le client verra « À venir »." style={{ width: '100%' }} />
+          ) : (
+            <p className="small muted" style={{ margin: 0 }}>À venir. Le champ sera disponible une fois la base mise à jour.</p>
+          )}
+        </section>
+
+        {others.length > 0 && (
+          <details className="fold">
+            <summary>Autres documents ({others.length}) : masqués, brouillons ou hors tableau</summary>
+            <div className="row">{others.map((d) => <Chip key={d.id} doc={d} onOpen={open} sub={`${KIND_LABEL[d.kind]}${d.title ? ` · ${d.title}` : ''}${d.visible ? '' : ' · masqué'}`} />)}</div>
+          </details>
+        )}
+
+        <details className="fold">
+          <summary>Réglages du projet</summary>
           <div className="form-grid">
             <Field label="Nom du projet"><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
             <Field label="Statut">
@@ -118,64 +196,18 @@ export default function AdminProject() {
                 {Object.entries(PROJECT_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </Field>
-            <Field label="Résumé affiché au client" full><textarea value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} /></Field>
+            {has('app_url') ? (
+              <Field label="Adresse de l'application (bouton « Application »)" full><input type="url" value={form.app_url ?? ''} onChange={(e) => setForm({ ...form, app_url: e.target.value })} placeholder="https://…" /></Field>
+            ) : (
+              <p className="small muted full">L'adresse de l'application pourra être saisie une fois la base mise à jour.</p>
+            )}
           </div>
-        </section>
-
-        <section className="card">
-          <div className="card-head">
-            <h2>Modules</h2>
-            <button className="btn btn-sm" onClick={() => setForm({ ...form, modules: [...form.modules, { name: '', description: '' }] })}>+ Module</button>
+          <div className="row">
+            <button className="btn btn-primary btn-sm" onClick={save}>Enregistrer</button>
+            <span className="spacer" />
+            <button className="btn btn-danger btn-sm" onClick={deleteProject}>Supprimer le projet</button>
           </div>
-          {form.modules.map((m, i) => (
-            <div key={i} className="form-grid" style={{ paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid var(--border)' }}>
-              <Field label="Nom"><input value={m.name} onChange={(e) => setModule(i, { name: e.target.value })} /></Field>
-              <div className="row" style={{ alignItems: 'flex-end' }}><button className="btn btn-sm btn-danger" onClick={() => setForm({ ...form, modules: form.modules.filter((_, j) => j !== i) })}>Retirer</button></div>
-              <Field label="Description" full><textarea value={m.description} onChange={(e) => setModule(i, { description: e.target.value })} rows={2} /></Field>
-            </div>
-          ))}
-          {!form.modules.length && <p className="muted small">Aucun module.</p>}
-        </section>
-
-        <section className="card">
-          <div className="card-head"><h2>Architecture</h2></div>
-{'architecture' in data.project ? (
-          <Field label="Texte du bloc « Architecture » affiché au client (hébergement, accès, sauvegardes…)" full>
-            <textarea rows={8} value={form.architecture ?? ''} onChange={(e) => setForm({ ...form, architecture: e.target.value })} placeholder="Laissez vide : le client verra « Informations bientôt disponibles »." />
-          </Field>
-          ) : <p className="small muted">Ce champ sera disponible une fois la base mise à jour (colonne « architecture »).</p>}
-        </section>
-
-        <section className="card">
-          <div className="card-head">
-            <h2>Feuille de route</h2>
-            <div className="row">
-              <label className="check"><input type="checkbox" checked={form.roadmap_visible} onChange={(e) => setForm({ ...form, roadmap_visible: e.target.checked })} /> Visible par le client</label>
-              <button className="btn btn-sm" onClick={() => setForm({ ...form, roadmap: { phases: [...phases, { title: '', objective: '', start: '', end: '', status: 'a_venir' }] } })}>+ Phase</button>
-            </div>
-          </div>
-          {phases.map((ph, i) => (
-            <div key={i} className="form-grid" style={{ paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid var(--border)' }}>
-              <Field label="Titre"><input value={ph.title} onChange={(e) => setPhase(i, { title: e.target.value })} /></Field>
-              <Field label="Statut">
-                <select value={ph.status} onChange={(e) => setPhase(i, { status: e.target.value as PhaseStatus })}>
-                  {Object.entries(PHASE_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </Field>
-              <Field label="Début"><input type="date" value={ph.start} onChange={(e) => setPhase(i, { start: e.target.value })} /></Field>
-              <Field label="Fin"><input type="date" value={ph.end} onChange={(e) => setPhase(i, { end: e.target.value })} /></Field>
-              <Field label="Objectif" full><textarea value={ph.objective} onChange={(e) => setPhase(i, { objective: e.target.value })} rows={2} /></Field>
-              <div className="full"><button className="btn btn-sm btn-danger" onClick={() => setForm({ ...form, roadmap: { phases: phases.filter((_, j) => j !== i) } })}>Retirer la phase</button></div>
-            </div>
-          ))}
-          {!phases.length && <p className="muted small">Aucune phase.</p>}
-        </section>
-
-        <div className="row">
-          <button className="btn btn-primary" onClick={save}>Enregistrer le projet</button>
-          <span className="spacer" />
-          <button className="btn btn-danger btn-sm" onClick={deleteProject}>Supprimer le projet</button>
-        </div>
+        </details>
       </div>
     </>
   );

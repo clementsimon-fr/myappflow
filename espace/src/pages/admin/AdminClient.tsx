@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { supabase } from '../../lib/supabase';
 import { must, useAsync } from '../../lib/useAsync';
 import { adminUsers } from '../../lib/adminApi';
@@ -48,6 +48,12 @@ export default function AdminClient() {
   useEffect(() => {
     if (data) setForm(data.client);
   }, [data]);
+
+  // Arrivée depuis la page projet (« Accès client », « Fiche client ») : on descend au bon bloc.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (form && hash) document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start' });
+  }, [form, hash]);
 
   const wrap = async (fn: () => Promise<void>, success?: string) => {
     setErr(null);
@@ -119,7 +125,7 @@ export default function AdminClient() {
     wrap(async () => {
       if (data!.profiles.length) throw new Error("Supprimez d'abord les accès de ce client.");
       must(await supabase.from('clients').delete().eq('id', clientId!).select());
-      navigate('/clients');
+      navigate('/');
     });
   };
 
@@ -130,7 +136,7 @@ export default function AdminClient() {
     <>
       <div className="page-head">
         <div>
-          <p className="crumbs"><Link to="/clients">Clients</Link></p>
+          <p className="crumbs"><Link to="/">Projets</Link></p>
           <h1>{data!.client.name}</h1>
         </div>
         <Link to={`/apercu/clients/${data!.client.id}`} className="btn">Vue client</Link>
@@ -157,7 +163,7 @@ export default function AdminClient() {
           </form>
         </section>
 
-        <section className="card">
+        <section className="card" id="acces">
           <div className="card-head"><h2>Accès à l'espace client</h2></div>
           {credentials && (
             <div className="alert alert-info">
@@ -200,7 +206,7 @@ export default function AdminClient() {
           </form>
         </section>
 
-        <form className="card" onSubmit={save}>
+        <form className="card" id="fiche" onSubmit={save}>
           <div className="card-head"><h2>Fiche client</h2><button className="btn btn-primary">Enregistrer</button></div>
           <div className="form-grid">
             <Field label="Raison sociale"><input value={form.name} onChange={set('name')} required /></Field>

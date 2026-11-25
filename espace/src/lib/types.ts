@@ -48,6 +48,8 @@ export interface Project {
   modules: ProjectModule[];
   roadmap: { phases: RoadmapPhase[] };
   roadmap_visible: boolean;
+  /** Bloc « Architecture » : hébergement, accès, sauvegardes… (texte libre). */
+  architecture: string;
   created_at: string;
 }
 

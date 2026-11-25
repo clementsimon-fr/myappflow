@@ -133,6 +133,7 @@ export default function AdminClient() {
           <p className="crumbs"><Link to="/clients">Clients</Link></p>
           <h1>{data!.client.name}</h1>
         </div>
+        <Link to={`/apercu/clients/${data!.client.id}`} className="btn">Vue client</Link>
       </div>
       <ErrorBox error={error || err} />
       {msg && <div className="alert alert-ok">{msg}</div>}

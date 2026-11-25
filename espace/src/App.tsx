@@ -54,6 +54,8 @@ export default function App() {
             <Route path="projets/:projectId" element={<AdminProject />} />
             <Route path="documents/:documentId" element={<AdminDocument />} />
             <Route path="reglages" element={<AdminSettings />} />
+            <Route path="apercu/clients/:clientId" element={<ClientHome preview />} />
+            <Route path="apercu/projets/:projectId" element={<ClientProject preview />} />
           </>
         ) : (
           <>

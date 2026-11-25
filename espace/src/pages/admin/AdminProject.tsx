@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { supabase } from '../../lib/supabase';
 import { must, useAsync } from '../../lib/useAsync';
 import { euros } from '../../lib/money';
@@ -9,6 +9,7 @@ import ModuleMatrix, { matrixDocIds } from '../../components/ModuleMatrix';
 import { docTotal } from '../../components/DocPanel';
 import { ErrorBox, Field, StatusBadge } from '../../components/ui';
 import { adminTodo } from './AdminProjects';
+import ProjectBar from '../../components/ProjectBar';
 
 function Chip({ doc, sub, onOpen }: { doc: Doc; sub?: string; onOpen: (d: Doc) => void }) {
   return (
@@ -23,6 +24,7 @@ function Chip({ doc, sub, onOpen }: { doc: Doc; sub?: string; onOpen: (d: Doc) =
 export default function AdminProject() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const { hash } = useLocation();
   const [form, setForm] = useState<Project | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -39,6 +41,10 @@ export default function AdminProject() {
   useEffect(() => {
     if (data) setForm({ ...data.project });
   }, [data]);
+
+  useEffect(() => {
+    if (form && hash === '#reglages') document.getElementById('reglages')?.scrollIntoView({ block: 'start' });
+  }, [form, hash]);
 
   if (loading || !form || !data) return <><ErrorBox error={error} /><p className="muted">Chargement…</p></>;
   const has = (col: string) => col in data.project;
@@ -92,25 +98,14 @@ export default function AdminProject() {
   const contractInvoices = docs.filter((d) => d.kind === 'facture' && d.related_document_id && byId.get(d.related_document_id)?.kind === 'contrat');
   const placed = new Set([...matrixDocIds(data.project.modules, docs), ...contracts.map((d) => d.id), ...contractInvoices.map((d) => d.id)]);
   const others = docs.filter((d) => !placed.has(d.id));
-  const appUrl = data.project.app_url?.trim();
-  const clientUrl = `/clients/${data.client.id}`;
 
   return (
     <>
+      <ProjectBar project={data.project} client={data.client} />
       <div className="page-head">
         <div>
           <p className="crumbs"><Link to="/">Projets</Link> / {data.client.name}</p>
           <h1>{data.project.name}</h1>
-        </div>
-        <div className="row">
-          {appUrl ? (
-            <a href={appUrl} target="_blank" rel="noreferrer" className="btn btn-primary">Application</a>
-          ) : (
-            <button type="button" className="btn" disabled title="Renseignez l'adresse de l'application dans « Réglages du projet », en bas de page">Application</button>
-          )}
-          <Link to={`${clientUrl}#acces`} className="btn">Accès client</Link>
-          <Link to={`${clientUrl}#fiche`} className="btn">Fiche client</Link>
-          <Link to={`/apercu/projets/${data.project.id}`} className="btn">Vue client</Link>
         </div>
       </div>
       <ErrorBox error={err} />
@@ -187,7 +182,7 @@ export default function AdminProject() {
           </details>
         )}
 
-        <details className="fold">
+        <details className="fold" id="reglages" open={hash === '#reglages' || undefined}>
           <summary>Réglages du projet</summary>
           <div className="form-grid">
             <Field label="Nom du projet"><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>

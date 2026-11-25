@@ -11,6 +11,7 @@ import ModuleMatrix, { matrixDocIds } from '../components/ModuleMatrix';
 import DocPanel, { docTotal } from '../components/DocPanel';
 import PreviewBanner, { clientVisible } from '../components/PreviewBanner';
 import { ErrorBox, StatusBadge } from '../components/ui';
+import ProjectBar from '../components/ProjectBar';
 
 /** Documents qui attendent une action du client (mis en évidence dans le tableau). */
 const needsAction = (d: Doc) => (d.kind === 'devis' && d.status === 'a_signer' && !d.signed_file_path) || (d.kind === 'facture' && d.status === 'a_regler');
@@ -109,6 +110,7 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
 
   return (
     <>
+      {preview && <ProjectBar project={project} client={client} />}
       {preview && <PreviewBanner clientName={client.name} backTo={`/projets/${project.id}`} />}
       <div className="page-head">
         <div>

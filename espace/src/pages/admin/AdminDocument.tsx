@@ -9,6 +9,7 @@ import { createMonthlyInvoice } from '../../lib/adminApi';
 import { downloadBlob, openStoredFile, uploadDocFile } from '../../lib/files';
 import type { Client, Doc, DocLine, Project } from '../../lib/types';
 import { ErrorBox, Field, StatusBadge } from '../../components/ui';
+import ProjectBar from '../../components/ProjectBar';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -160,6 +161,7 @@ export default function AdminDocument() {
 
   return (
     <>
+      <ProjectBar project={project} client={client} />
       <div className="page-head">
         <div>
           <p className="crumbs">

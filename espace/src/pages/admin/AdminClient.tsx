@@ -8,6 +8,7 @@ import { PROJECT_STATUS } from '../../lib/labels';
 import { frDate } from '../../lib/money';
 import type { Client, Profile, Project } from '../../lib/types';
 import { Empty, ErrorBox, Field } from '../../components/ui';
+import ProjectBar from '../../components/ProjectBar';
 
 const PORTAL_URL = 'https://myappflow.vercel.app/espace';
 
@@ -132,8 +133,10 @@ export default function AdminClient() {
   if (loading || !form) return <p className="muted">Chargement…</p>;
   const set = (k: keyof Client) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
 
+  const mainProject = data!.projects.find((p) => p.status !== 'archive') ?? data!.projects[0];
   return (
     <>
+      {mainProject && <ProjectBar project={mainProject} client={data!.client} />}
       <div className="page-head">
         <div>
           <p className="crumbs"><Link to="/">Projets</Link></p>

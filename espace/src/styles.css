@@ -330,4 +330,20 @@ button.doc-chip:hover { border-color: var(--accent); transform: translateY(-1px)
 .fold > summary { cursor: pointer; color: var(--text-muted); font-size: 14px; padding: 6px 0; }
 .fold[open] > summary { margin-bottom: 10px; }
 .project-tile h3 { margin: 4px 0 10px; }
-#acces, #fiche { scroll-margin-top: 80px; }
+#acces, #fiche { scroll-margin-top: 140px; }
+
+/* Barre du projet (admin) : toujours visible sous l'en-tête */
+.project-bar {
+  position: sticky; top: 61px; z-index: 9;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin: -8px 0 20px; padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .06);
+}
+.project-bar-name { color: var(--text); }
+.project-bar-name:hover { text-decoration: none; }
+.project-bar-name.active { pointer-events: none; }
+#reglages { scroll-margin-top: 140px; }
+@media (max-width: 700px) {
+  .project-bar { position: static; }
+}

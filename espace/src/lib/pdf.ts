@@ -170,6 +170,28 @@ export function buildPdf(doc: Doc, client: Client, settings: Settings): jsPDF {
     w.text(doc.body, { size: 9.5, gap: 4 });
   }
 
+  if (doc.kind === 'contrat') {
+    // Bloc de signatures : le Prestataire signe (image des Réglages), le Client signe à la main.
+    w.ensure(44);
+    const colW = (CONTENT_W - 10) / 2;
+    const top = w.y;
+    const xClient = MARGIN + colW + 10;
+    w.text('Le Prestataire', { size: 9, color: MUTED, width: colW, gap: 0.5 });
+    w.text(settings.issuer_name, { size: 10, bold: true, width: colW, gap: 1 });
+    if (settings.signature_data_url) {
+      try {
+        p.addImage(settings.signature_data_url, 'PNG', MARGIN, w.y, 42, 20);
+      } catch {
+        /* image illisible : on continue sans signature */
+      }
+    }
+    w.y = top;
+    w.text('Le Client', { size: 9, color: MUTED, x: xClient, width: colW, gap: 0.5 });
+    w.text(client.name, { size: 10, bold: true, x: xClient, width: colW, gap: 1 });
+    w.text('Signature précédée de « Bon pour accord »', { size: 8, color: MUTED, x: xClient, width: colW, gap: 0 });
+    w.y = top + 34;
+  }
+
   if (doc.payment_terms) {
     w.ensure(14);
     w.text(doc.kind === 'devis' ? 'Échéancier de paiement' : 'Conditions de paiement', { size: 10, bold: true, gap: 1 });

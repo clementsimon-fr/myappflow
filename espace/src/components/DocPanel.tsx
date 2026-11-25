@@ -108,6 +108,19 @@ export default function DocPanel({ doc, client, settings, related, busy, error, 
         )}
 
         {doc.kind === 'contrat' && doc.body && <div className="panel-box panel-body">{doc.body}</div>}
+        {doc.kind === 'contrat' && (
+          <div className="panel-box panel-sign">
+            <div>
+              <p className="panel-box-label">Le Prestataire</p>
+              <strong>{settings?.issuer_name || 'MyAppFlow'}</strong>
+              {settings?.signature_data_url && <img src={settings.signature_data_url} alt="Signature du prestataire" />}
+            </div>
+            <div>
+              <p className="panel-box-label">Le Client</p>
+              <strong>{client.name}</strong>
+            </div>
+          </div>
+        )}
 
         {(doc.payment_terms || doc.notes) && (
           <div className="panel-box panel-notes">

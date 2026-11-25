@@ -89,15 +89,6 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
     }, `Merci, votre devis ${doc.number} signé a bien été envoyé.`);
   };
 
-  const declarePayment = (d: Doc) => {
-    if (!window.confirm(`Confirmez-vous avoir payé la facture ${d.number} (${euros(docTotal(d))}) ?`)) return;
-    run(async () => {
-      const { error: err } = await supabase.rpc('client_declare_payment', { p_document_id: d.id });
-      if (err) throw new Error(err.message);
-      await reload();
-    }, `Merci, votre paiement de la facture ${d.number} a été signalé. Nous le vérifions.`);
-  };
-
   // Bloc Contrat : les contrats, et les factures rattachées à un contrat.
   const contracts = docs.filter((d) => d.kind === 'contrat').sort((a, b) => b.issue_date.localeCompare(a.issue_date));
   const contractInvoices = docs
@@ -190,7 +181,6 @@ export default function ClientProject({ preview = false }: { preview?: boolean }
           onDownload={(variant) => run(() => downloadDocument(openDoc, client, variant))}
           onOpenSigned={() => run(() => openStoredFile(openDoc.signed_file_path!))}
           onUploadSigned={() => fileInput.current?.click()}
-          onDeclarePayment={() => declarePayment(openDoc)}
         />
       )}
     </>

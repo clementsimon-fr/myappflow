@@ -95,7 +95,9 @@ export function buildPdf(doc: Doc, client: Client, settings: Settings): jsPDF {
   w.y = yBlocks;
   const xClient = MARGIN + CONTENT_W / 2 + 4;
   w.text('CLIENT', { size: 8, bold: true, color: ACCENT, x: xClient, width: colW, gap: 0.5 });
-  const clientBlock = [client.name, client.address, client.siret && `SIRET : ${client.siret}`, client.contact_name].filter(Boolean).join('\n');
+  // Factures et devis : la société seule, sans personne. Le contrat ajoute le contact et son e-mail.
+  const contact = doc.kind === 'contrat' ? [client.contact_name, client.contact_email] : [];
+  const clientBlock = [client.name, client.address, client.siret && `SIRET : ${client.siret}`, ...contact].filter(Boolean).join('\n');
   w.text(clientBlock, { size: 9, x: xClient, width: colW, gap: 0 });
   w.y = Math.max(w.y, yAfterIssuer) + 8;
 

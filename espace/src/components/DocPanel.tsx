@@ -17,7 +17,6 @@ interface Props {
   onClose: () => void;
   onDownload: (variant: 'plain' | 'acquitted') => void;
   onUploadSigned: () => void;
-  onDeclarePayment: () => void;
   onOpenSigned: () => void;
 }
 
@@ -31,7 +30,7 @@ const DETAIL: Record<Doc['kind'], string> = {
 };
 
 /** Fiche d'un document, présentée comme le document lui-même, avec les actions du client en bas. */
-export default function DocPanel({ doc, client, settings, related, busy, error, readOnly, onClose, onDownload, onUploadSigned, onDeclarePayment, onOpenSigned }: Props) {
+export default function DocPanel({ doc, client, settings, related, busy, error, readOnly, onClose, onDownload, onUploadSigned, onOpenSigned }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     closeRef.current?.focus();
@@ -149,9 +148,6 @@ export default function DocPanel({ doc, client, settings, related, busy, error, 
 
           {doc.kind === 'facture' && (
             <>
-              {doc.status === 'a_regler' && (
-                <button className="btn btn-primary btn-block" onClick={onDeclarePayment} disabled={busy || readOnly} title={noAction}>J'ai payé cette facture</button>
-              )}
               {doc.status === 'reglement_declare' && <p className="panel-hint">Règlement signalé le {frDate(doc.client_paid_declared_at)}, en cours de vérification.</p>}
               <button className="btn btn-block" onClick={() => onDownload('acquitted')} disabled={busy || !acquitted}>
                 {acquitted ? 'Télécharger la facture acquittée' : 'Facture acquittée (disponible après réception du paiement)'}
